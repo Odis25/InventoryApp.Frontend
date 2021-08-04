@@ -1,0 +1,132 @@
+﻿@using InventoryApp.Frontend.Models.Device
+
+@inject HttpClient HttpClient
+@inject NavigationManager Navigation
+@inject IJSRuntime IJS
+@inject IDialogService DialogService
+
+
+<MudPaper Class="py-1 px-4 mt-2" Width="100%" Elevation="2">
+    <MudGrid>
+        <MudItem xs="6" Class="d-flex justify-center">
+            <MudTextField @bind-Value="searchString"
+                          Placeholder="Найти..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mb-3 mr-2">
+            </MudTextField>
+        </MudItem>
+        <MudItem xs="3" />
+        <MudItem xs="3" Class="d-flex align-center justify-end">
+            <AuthorizeView Roles="Admin">
+                <MudButton Variant="Variant.Filled"
+                           Class="mr-2"
+                           Color="Color.Dark"
+                           @onclick="AddNewDevice"
+                           StartIcon="@Icons.Filled.Queue">Новое оборудование</MudButton>
+            </AuthorizeView>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Dark"
+                       @onclick="PrintTable"
+                       StartIcon="@Icons.Filled.Print">Печать</MudButton>
+        </MudItem>
+    </MudGrid>
+
+</MudPaper>
+
+<MudTable Elevation="2" T="DeviceDto" OnRowClick="OpenDeviceDetails"
+          Class="mt-2 print-content" Items="@DevicesList" Hover="true" Striped="true"
+          Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Type)">Тип</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Name)">Название</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Manufacturer)">Производитель</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Model)">Модель</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.CurrentUser?.FullName)">Текущий владелец</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Тип">@context.Type</MudTd>
+        <MudTd DataLabel="Название">@context.Name</MudTd>
+        <MudTd DataLabel="Производитель">@context.Manufacturer</MudTd>
+        <MudTd DataLabel="Модель">@context.Model</MudTd>
+        @{ var href = $"/employee/{context.CurrentUser?.Id}/details";}
+        <MudTd DataLabel="Текущий владелец"><MudLink Color="Color.Info" Href="@href">@context.CurrentUser?.FullName</MudLink></MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code{
+
+    [Parameter] public IList<DeviceDto> DevicesList { get; set; }
+
+    private string searchString = "";
+
+    private bool FilterFunc(DeviceDto device)
+    {
+        bool inUseOnly = false;
+        var filtredString = searchString;
+
+        if (searchString.Contains("/use", StringComparison.OrdinalIgnoreCase))
+        {
+            filtredString = searchString.Replace("/use", "", StringComparison.OrdinalIgnoreCase).Trim();
+            inUseOnly = true;
+        }
+
+        if (inUseOnly)
+        {
+            if (device.CurrentUser == null) return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(filtredString)) return true;
+
+        if (device.Name.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (device.Model.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (device.Manufacturer.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (device.Type.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
+
+        if (device.CurrentUser != null)
+        {
+            if (device.CurrentUser.FullName
+                .Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+
+        return false;
+    }
+
+    public async Task AddNewDevice()
+    {
+        var deviceTypes = await HttpClient.GetFromJsonAsync<DeviceTypesListVm>("api/device/types");
+
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var parameters = new DialogParameters();
+
+        parameters.Add("deviceTypes", deviceTypes.DeviceTypes);
+
+        var dialog = DialogService.Show<CreateDevice>("", parameters, options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var devicesList = await HttpClient.GetFromJsonAsync<DevicesListVm>("api/device");
+            DevicesList = devicesList.Devices ?? new List<DeviceDto>();
+        }
+    }
+
+    public void OpenDeviceDetails(TableRowClickEventArgs<DeviceDto> args)
+    {
+        if (args.MouseEventArgs.Detail == 2)
+        {
+            var id = args.Item.Id;
+            Navigation.NavigateTo($"device/{id}/details");
+        }
+    }
+
+    public async Task PrintTable()
+    {
+        await IJS.InvokeVoidAsync("Print");
+    }
+}

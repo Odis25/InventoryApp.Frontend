@@ -1,0 +1,56 @@
+﻿@using InventoryApp.Frontend.Models.Device
+
+
+@inject HttpClient HttpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Выберите оборудование:</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTable Items="Devices" Height="400px" FixedHeader="true" MultiSelection="true" @bind-SelectedItems="selectedItems" Hover="true">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Type)">Тип</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Name)">Название</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Model)">Модель</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Manufacturer)">Производитель</MudTableSortLabel></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Тип">@context.Type</MudTd>
+                <MudTd DataLabel="Название">@context.Name</MudTd>
+                <MudTd DataLabel="Модель">@context.Model</MudTd>
+                <MudTd DataLabel="Производитель">@context.Manufacturer</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Dark" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+        <MudButton Color="Color.Dark" OnClick="Cancel">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private IList<DeviceDto> Devices { get; set; } = new List<DeviceDto>();
+    private HashSet<DeviceDto> selectedItems = new HashSet<DeviceDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var devices = await HttpClient.GetFromJsonAsync<DevicesListVm>("api/device/available");
+
+        Devices = devices.Devices;
+    }
+
+    private void Submit()
+    {
+        if (selectedItems.Any())
+        {
+            var idList = selectedItems.Select(d => d.Id).ToList();
+            MudDialog.Close(DialogResult.Ok(idList));
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

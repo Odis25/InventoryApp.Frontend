@@ -1,0 +1,47 @@
+﻿@page "/equipment"
+
+@using InventoryApp.Frontend.Models.Device
+@using InventoryApp.Frontend.Models.Cable
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+@if (DevicesList == null)
+{
+    <MudText Class="my-16" Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Загрузка...</MudText>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="10">
+            <MudTabs Color="Color.Dark" Rounded="true" ApplyEffectsToContainer="true" Class="mt-4">
+                <MudTabPanel Icon="@Icons.Filled.Build" Text="Оборудование">
+                    <DeviceTable DevicesList="DevicesList" />
+                </MudTabPanel>
+                <MudTabPanel Icon="@Icons.Filled.ElectricalServices" Text="Кабели">
+                    <CableTable CablesList="CablesList" />
+                </MudTabPanel>
+            </MudTabs>
+        </MudItem>
+    </MudGrid>   
+}
+
+
+@code {
+
+    private IList<DeviceDto> DevicesList { get; set; }
+    private IList<CableDto> CablesList { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = HttpClientFactory.CreateClient("Unauthorized");
+
+        var devicesList = await httpClient.GetFromJsonAsync<DevicesListVm>("api/device");
+        var cablesList = await httpClient.GetFromJsonAsync<CablesListVm>("api/cable");
+
+        DevicesList = devicesList.Devices ?? new List<DeviceDto>();
+        CablesList = cablesList.Cables ?? new List<CableDto>();
+    }
+
+}

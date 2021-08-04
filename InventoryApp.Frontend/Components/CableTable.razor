@@ -1,0 +1,110 @@
+﻿@using InventoryApp.Frontend.Models.Cable
+
+@inject HttpClient HttpClient
+@inject NavigationManager Navigation
+@inject IJSRuntime IJS
+@inject IDialogService DialogService
+
+
+<MudPaper Class="py-1 px-4 mt-2" Width="100%" Elevation="2">
+    <MudGrid>
+        <MudItem xs="6" Class="d-flex justify-center">
+            <MudTextField @bind-Value="searchString"
+                          Placeholder="Найти..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mb-3 mr-2">
+            </MudTextField>
+        </MudItem>
+        <MudItem xs="3" />
+        <MudItem xs="3" Class="d-flex align-center justify-end">
+            <AuthorizeView Roles="Admin">
+                <MudButton Variant="Variant.Filled"
+                           Class="mr-2"
+                           Color="Color.Dark"
+                           @onclick="AddNewCable"
+                           StartIcon="@Icons.Filled.Queue">Новый кабель</MudButton>
+            </AuthorizeView>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Dark"
+                       @onclick="PrintTable"
+                       StartIcon="@Icons.Filled.Print">Печать</MudButton>
+        </MudItem>
+    </MudGrid>
+
+</MudPaper>
+
+<MudTable Elevation="2" T="CableDto" OnRowClick="OpenCableDetails"
+          Class="mt-2 print-content" Items="@CablesList" Hover="true" Striped="true"
+          Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Name)">Обозначение</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Type)">Кол-во жил и сечение</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Length)">Длина</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.CurrentUser?.FullName)">Текущий владелец</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Обозначения">@context.Name</MudTd>
+        <MudTd DataLabel="Кол-во жил и сечение">@context.Type</MudTd>
+        <MudTd DataLabel="Длина">@context.Length</MudTd>
+        @{ var href = $"/employee/{context.CurrentUser?.Id}/details";}
+        <MudTd DataLabel="Текущий владелец"><MudLink Color="Color.Info" Href="@href">@context.CurrentUser?.FullName</MudLink></MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code{
+
+    [Parameter] 
+    public IList<CableDto> CablesList { get; set; }
+
+    private string searchString = "";
+
+    private bool FilterFunc(CableDto cable)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+
+        if (cable.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (cable.Mark.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (cable.Length.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (cable.Type.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+
+        if (cable.CurrentUser != null)
+        {
+            if (cable.CurrentUser.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+
+        return false;
+    }
+
+    public async Task AddNewCable()
+    {
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = DialogService.Show<CreateCable>("", options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var cablesList = await HttpClient.GetFromJsonAsync<CablesListVm>("api/cable");
+            CablesList = cablesList.Cables ?? new List<CableDto>();
+        }
+    }
+
+    public void OpenCableDetails(TableRowClickEventArgs<CableDto> args)
+    {
+        if (args.MouseEventArgs.Detail == 2)
+        {
+            var id = args.Item.Id;
+            Navigation.NavigateTo($"cable/{id}/details");
+        }
+    }
+
+    public async Task PrintTable()
+    {
+        await IJS.InvokeVoidAsync("Print");
+    }
+}

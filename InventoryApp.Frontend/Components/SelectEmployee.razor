@@ -1,0 +1,52 @@
+﻿@using InventoryApp.Frontend.Models.Employee
+
+
+@inject HttpClient HttpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Выберите сотрудника:</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTable Items="Employees" Height="400px" FixedHeader="true" @bind-SelectedItem="selected" Hover="true">
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<EmployeeDto, object>(x=>x.FullName)">Ф.И.О.</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<EmployeeDto, object>(x=>x.Department)">Департамент</MudTableSortLabel></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="Ф.И.О.">@context.FullName</MudTd>
+                <MudTd DataLabel="Департамент">@context.Department</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudText Class="pl-4" Align="Align.Left">Выбранный сотрудник:  @selected?.FullName</MudText>
+        <MudSpacer/>
+        <MudButton Color="Color.Dark" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+        <MudButton Color="Color.Dark" OnClick="Cancel">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private IList<EmployeeDto> Employees { get; set; } = new List<EmployeeDto>();
+    private EmployeeDto selected = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var employees = await HttpClient.GetFromJsonAsync<EmployeesListVm>("api/employee");
+        Employees = employees.Employees;
+    }
+
+    private void Submit()
+    {
+        if (selected != null)
+            MudDialog.Close(DialogResult.Ok(selected.Id));
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

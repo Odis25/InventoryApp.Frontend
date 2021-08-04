@@ -1,0 +1,257 @@
+﻿@page "/cable/{id}/details"
+
+@using InventoryApp.Frontend.Models.Cable
+@using InventoryApp.Frontend.Models.Checkout
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+@if (Cable == null)
+{
+    <MudText Class="my-16" Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Загрузка...</MudText>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="10">
+            <MudPaper Style="background: #424242;" Class="d-flex align-center justify-center mud-width-full py-2 mt-4 shades-text text-white">
+                <MudText Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Детализация</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCard Style="height:100%">
+                <MudCardHeader Class="pl-8">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Кабель</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudMenu Icon="@Icons.Material.Filled.Settings" Color="Color.Default">
+                            <MudMenuItem @onclick="()=>_mbox.Show()"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.Info" Color="Color.Default" />Информация</MudMenuItem>
+                            <AuthorizeView Roles="Admin">
+                                <MudMenuItem @onclick="EditCable"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.Edit" Color="Color.Default" />Редактировать</MudMenuItem>
+                                <MudMenuItem @onclick="DeleteCable"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.Delete" Color="Color.Default" />Удалить</MudMenuItem>
+                            </AuthorizeView>
+                        </MudMenu>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="px-8">
+                    <MudPaper Elevation="4" Class="pa-4">
+                        @if (_readonly)
+                        {
+                            <MudField Label="Обозначение" Variant="Variant.Text">@Cable.Name</MudField>
+                            <MudField Label="Марка" Variant="Variant.Text">@Cable.Mark</MudField>
+                            <MudField Label="Количество жил и сечение" Variant="Variant.Text">@Cable.Type</MudField>
+                            <MudField Label="Длина" Variant="Variant.Text">@Cable.Length</MudField>
+                            <MudTextField Class="mt-8" Value="Cable.Description" Lines="5" Label="Комментарии" Variant="Variant.Outlined" ReadOnly="_readonly"></MudTextField>
+                        }
+                        else
+                        {
+                            <MudForm @ref="_form">
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.Name" Label="Обозначение" Variant="Variant.Text" For="() => Command.Name" />
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.Mark" Label="Марка" Variant="Variant.Text" For="() => Command.Mark" />
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.Type" Label="Количество жил и сечение" Variant="Variant.Text" For="() => Command.Type" />
+                                <MudNumericField Variant="Variant.Text" Label="Длина" @bind-Value="Command.Length" For="() => Command.Length" />
+                                <MudTextField Class="mt-8" @bind-Value="Command.Description" Lines="5" Label="Комментарии" Variant="Variant.Outlined"></MudTextField>
+                            </MudForm>
+                        }
+                    </MudPaper>
+                </MudCardContent>
+                <MudCardActions Class="justify-end align-center pr-6">
+                    @if (!_readonly)
+                    {
+                        <MudButton StartIcon="@Icons.Filled.Save" Class="mr-2 mb-2" Variant="Variant.Filled" OnClick="Submit" Color="Color.Success">Сохранить</MudButton>
+                    }
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="6">
+            <MudCard Style="height:100%">
+                <MudCardHeader Class="pl-8">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">История использования:</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <AuthorizeView Roles="Admin">
+                            <MudMenu Icon="@Icons.Material.Filled.Settings" Color="Color.Default">
+                                @if (!Cable.InUse)
+                                {
+                                    <MudMenuItem OnClick="CheckinCable"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.KeyboardTab" Color="Color.Default" />Выдать кабель</MudMenuItem>
+                                }
+                                else
+                                {
+                                    <MudMenuItem OnClick="CheckoutCable"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.KeyboardReturn" Color="Color.Default" />Забрать кабель</MudMenuItem>
+                                }
+                            </MudMenu>
+                        </AuthorizeView>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="px-8">
+                    <MudSimpleTable Elevation="4" Dense="true" FixedHeader="true" Style="height:520px">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Выдано</th>
+                                <th>Возвращено</th>
+                                <th>Сотрудник</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Cable.Checkouts.Count; i++)
+                            {
+                                <tr>
+                                    <td>@(i+1)</td>
+                                    <td>@Cable.Checkouts[i].CheckedIn</td>
+                                    <td>@Cable.Checkouts[i].CheckedOut</td>
+                                    @{ 
+                                        var name = Cable.Checkouts[i].Employee.FullName;
+                                        var href = $"/employee/{Cable.Checkouts[i].Employee.Id}/details";
+                                    }
+                                    <td><MudLink Color="Color.Info" Href="@href">@name</MudLink></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudMessageBox @ref="_mbox" Title="Доп. Инфо">
+        <MessageContent>
+            <MudField Label="Добавлено" Variant="Variant.Text">@_created</MudField>
+            <MudField Label="Последнее изменение" Variant="Variant.Text">@_edited</MudField>
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Info">Ok</MudButton>
+        </YesButton>
+    </MudMessageBox>
+}
+
+@code{
+
+    [Parameter]
+    public string Id { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private HttpClient _httpClient;
+    private MudForm _form;
+    private MudMessageBox _mbox;
+
+    private bool _readonly = true;
+    private string _created;
+    private string _edited;
+
+    public CableDetailsVm Cable { get; set; }
+    public UpdateCableCommand Command { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            _httpClient = HttpClientFactory.CreateClient("API");
+        }
+        else
+        {
+            _httpClient = HttpClientFactory.CreateClient("Unauthorized");
+        }
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        Cable = await _httpClient.GetFromJsonAsync<CableDetailsVm>($"api/cable/{int.Parse(Id)}");
+
+        _created = $"{Cable.CreationDate.ToShortDateString()} ({Cable.CreatedBy})";
+
+        _edited = !string.IsNullOrEmpty(Cable.EditedBy)
+            ? $"{Cable.CreationDate.ToShortDateString()} ({Cable.EditedBy})" : $"---";
+    }
+
+    private async Task Submit()
+    {
+        _form.Validate();
+
+        if (_form.IsValid)
+        {
+            var result = await _httpClient.PutAsJsonAsync("api/cable", Command);
+
+            if (result.IsSuccessStatusCode)
+            {
+                await UpdateData();
+                _readonly = true;
+            }
+        }
+    }
+
+    private void EditCable()
+    {
+        Command = new UpdateCableCommand
+        {
+            Id = Cable.Id,
+            Name = Cable.Name,
+            Mark = Cable.Mark,
+            Length = Cable.Length,
+            Type = Cable.Type
+        };
+
+        _readonly = !_readonly;
+    }
+
+    private async Task DeleteCable()
+    {
+        var result = await DialogService.ShowMessageBox(
+            title: "Удаление кабеля",
+            message: "Вы уверены что хотите удалить этот кабель?",
+            yesText: "Да",
+            cancelText: "Нет");
+
+        if (result.HasValue)
+        {
+            await _httpClient.DeleteAsync($"api/cable/{Cable.Id}");
+            Navigation.NavigateTo("/equipment");
+        }
+    }
+
+    private async Task CheckinCable()
+    {
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = DialogService.Show<SelectEmployee>("", options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            int.TryParse(result.Data.ToString(), out int employeeId);
+
+            var command = new CheckinCableCommand
+            {
+                CablesId = new List<int> { Cable.Id },
+                EmployeeId = employeeId
+            };
+
+            await _httpClient.PostAsJsonAsync("api/cable/checkin", command);
+            await UpdateData();
+        }
+    }
+
+    private async Task CheckoutCable()
+    {
+        var result = await DialogService.ShowMessageBox(title: "Возврат оборудования",
+            message: "Вы уверены что хотите забрать оборудование у сотрудника?",
+            yesText: "Да",
+            cancelText: "Нет");
+
+        if (result.HasValue)
+        {
+            var command = new CheckoutCableCommand { CableId = Cable.Id };
+            await _httpClient.PostAsJsonAsync("api/cable/checkout", command);
+            await UpdateData();
+        }
+    }
+}

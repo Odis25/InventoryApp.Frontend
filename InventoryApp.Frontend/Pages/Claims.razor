@@ -1,0 +1,25 @@
+﻿@page "/claims"
+<AuthorizeView>
+    <Authorized>
+        <MudPaper Class="pa-4 mt-4">
+            <MudText Class="pl-4" Typo="Typo.h5">
+                <b>
+                    Привет, @context.User.FindFirst("family_name").Value @context.User.FindFirst("given_name").Value,
+                    вот список ваших клаймов:
+                </b>
+            </MudText>
+            <MudDivider Class="my-4"/>
+            <MudList>
+                @foreach (var claim in context.User.Claims)
+                {
+                <MudListItem><b>@claim.Type</b>: @claim.Value</MudListItem>
+                }
+            </MudList>
+        </MudPaper>
+    </Authorized>
+    <NotAuthorized>
+        <MudPaper Class="pa-4 mt-4">
+            Извините, невозможно отобразить список клаймов, пока вы не авторизованы в приложении
+        </MudPaper>
+    </NotAuthorized>
+</AuthorizeView>

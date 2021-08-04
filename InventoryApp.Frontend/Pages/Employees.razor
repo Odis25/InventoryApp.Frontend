@@ -1,0 +1,159 @@
+﻿@page "/employee"
+
+@using InventoryApp.Frontend.Models.Employee
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
+@inject IJSRuntime IJS
+@inject NavigationManager Navigation
+
+@if (EmployeesList == null)
+{
+    <MudText Class="my-16" Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Загрузка...</MudText>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="10">
+
+            <MudPaper Style="background: #424242;" Class="d-flex align-center justify-center mud-width-full py-2 mt-4 shades-text text-white">
+                <MudText Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Сотрудники</MudText>
+            </MudPaper>
+
+            <MudPaper Class="py-1 px-4 mt-2" Width="100%" Elevation="2">
+                <MudGrid>
+                    <MudItem xs="6" Class="d-flex justify-center">
+                        <MudTextField @bind-Value="searchString"
+                                      Placeholder="Найти..."
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium"
+                                      Class="mb-3 mr-2">
+                        </MudTextField>
+                    </MudItem>
+                    <MudItem xs="3" />
+                    <MudItem xs="3" Class="d-flex align-center justify-end">
+                        <AuthorizeView Roles="Admin">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Dark"
+                                       Class="mr-2"
+                                       @onclick="AddNewEmployee"
+                                       StartIcon="@Icons.Filled.PersonAdd">Новый сотрудник</MudButton>
+                        </AuthorizeView>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Dark"
+                                   @onclick="PrintTable"
+                                   StartIcon="@Icons.Filled.Print">Печать</MudButton>
+                    </MudItem>
+                </MudGrid>
+
+            </MudPaper>
+
+            <MudTable Elevation="2" T="EmployeeDto" OnRowClick="OpenEmployeeDetails"
+                      Class="mt-2 print-content" Items="@EmployeesList" Hover="true" Striped="true"
+                      Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
+                <HeaderContent>
+                    <MudTh>Id</MudTh>
+                    <MudTh>Ф.И.О.</MudTh>
+                    <MudTh>Департамент</MudTh>
+                    <MudTh>Оборудование на балансе</MudTh>
+                    <MudTh>Кабели на балансе</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Id">@context.Id</MudTd>
+                    <MudTd DataLabel="Ф.И.О.">@context.FullName</MudTd>
+                    <MudTd DataLabel="Департамент">@context.Department</MudTd>
+                    <MudTd DataLabel="Оборудование на балансе">
+                        <ol class="pl-4">
+                            @foreach (var item in context.Devices)
+                            {
+                                var href = $"/device/{item.Id}/details";
+                                <li><MudLink Color="Color.Info" Href="@href">@item.Name @item.Model</MudLink></li>
+                            }
+                        </ol>
+                    </MudTd>
+                    <MudTd DataLabel="Кабели на балансе">
+                        <ol class="pl-4">
+                            @foreach (var item in context.Cables)
+                            {
+                                var href = $"/cable/{item.Id}/details";
+                                <li><MudLink Color="Color.Info" Href="@href">@item.Name @item.Mark</MudLink></li>
+                            }
+                        </ol>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+}
+
+
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private string searchString = "";
+
+    private HttpClient _httpClient;
+
+    private IEnumerable<EmployeeDto> EmployeesList { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            _httpClient = HttpClientFactory.CreateClient("API");
+        }
+        else
+        {
+            _httpClient = HttpClientFactory.CreateClient("Unauthorized");
+        }
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        var employeeList = await _httpClient.GetFromJsonAsync<EmployeesListVm>("api/employee");
+
+        EmployeesList = employeeList.Employees ?? new List<EmployeeDto>();
+    }
+
+    private bool FilterFunc(EmployeeDto employee)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+
+        if (employee.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (employee.Department.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    }
+
+    private void OpenEmployeeDetails(TableRowClickEventArgs<EmployeeDto> args)
+    {
+        if (args.MouseEventArgs.Detail == 2)
+        {
+            var id = args.Item.Id;
+            Navigation.NavigateTo($"employee/{id}/details");
+        }
+    }
+
+    private async Task AddNewEmployee()
+    {
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = DialogService.Show<CreateEmployee>("", options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await UpdateData();
+        }
+    }
+
+    public async Task PrintTable()
+    {
+        await IJS.InvokeVoidAsync("Print");
+    }
+}

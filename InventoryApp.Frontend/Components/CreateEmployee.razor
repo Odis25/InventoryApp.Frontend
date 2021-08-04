@@ -1,0 +1,52 @@
+﻿@using InventoryApp.Frontend.Models.Employee
+
+@inject HttpClient HttpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-3 mb-n1" /> Новый сотрудник
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Фамилия" For="() => Command.LastName" @bind-Value="Command.LastName" />
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Имя" For="() => Command.Name" @bind-Value="Command.Name" />
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Отчество" For="() => Command.Patronymic"@bind-Value="Command.Patronymic" />
+            <MudSelect Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" For="() => Command.DepartmentId" @bind-Value="Command.DepartmentId">
+                <MudSelectItem Value="0">---Выберите департамент---</MudSelectItem>
+                <MudSelectItem Value="1">ДИСО</MudSelectItem>
+                <MudSelectItem Value="2">ДАСУ</MudSelectItem>
+                <MudSelectItem Value="3">ДАСО</MudSelectItem>
+                <MudSelectItem Value="4">ДПТК</MudSelectItem>
+                <MudSelectItem Value="5">ДТОМ</MudSelectItem>
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Dark" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+        <MudButton Color="Color.Dark" OnClick="Cancel">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code{
+
+    MudForm form;
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    public CreateEmployeeCommand Command { get; set; } = new();
+
+    async Task Submit()
+    {
+        form.Validate();
+
+        if (form.IsValid)
+        {
+            var id = await HttpClient.PostAsJsonAsync("api/employee", Command);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

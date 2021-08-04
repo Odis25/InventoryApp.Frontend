@@ -1,0 +1,287 @@
+﻿@page "/device/{id}/details"
+
+@using InventoryApp.Frontend.Models.Device
+@using InventoryApp.Frontend.Models.Checkout
+
+@inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+@if (Device == null)
+{
+    <MudText Class="my-16" Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Загрузка...</MudText>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="10">
+            <MudPaper Style="background: #424242;" Class="d-flex align-center justify-center mud-width-full py-2 mt-4 shades-text text-white ">
+                <MudText Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Детализация</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="4">
+            <MudCard Style="height:100%">
+                <MudCardHeader Class="pl-8">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Оборудование</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudMenu Icon="@Icons.Material.Filled.Settings" Color="Color.Default">
+                            <MudMenuItem @onclick="()=>_mbox.Show()"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.Info" Color="Color.Default" />Информация</MudMenuItem>
+                            <AuthorizeView Roles="Admin">
+                                <MudMenuItem @onclick="EditDevice"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.Edit" Color="Color.Default" />Редактировать</MudMenuItem>
+                                <MudMenuItem @onclick="DeleteDevice"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.Delete" Color="Color.Default" />Удалить</MudMenuItem>
+                            </AuthorizeView>
+                        </MudMenu>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="px-8">
+                    <MudPaper Elevation="4" Class="pa-4">
+                        @if (_readonly)
+                        {
+                            <MudField Label="Год выпуска" Variant="Variant.Text">@Device.Year</MudField>
+                            <MudField Label="Название" Variant="Variant.Text">@Device.Name</MudField>
+                            <MudField Label="Модель" Variant="Variant.Text">@Device.Model</MudField>
+                            <MudField Label="Производитель" Variant="Variant.Text">@Device.Manufacturer</MudField>
+                            <MudField Label="Тип" Variant="Variant.Text">@Device.Type.Name</MudField>
+                            <MudField Label="Заводской номер" Variant="Variant.Text">@Device.SerialNumber</MudField>
+
+                            <MudTextField Class="mt-8" Value="Device.Description" Lines="5" Label="Комментарии" Variant="Variant.Outlined" ReadOnly="_readonly"></MudTextField>
+                        }
+                        else
+                        {
+                            <MudForm @ref="_form">
+                                <MudNumericField Variant="Variant.Text" Label="Год выпуска" @bind-Value="Command.Year" For="() => Command.Year" />
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.Name" Label="Название" Variant="Variant.Text" For="() => Command.Name" />
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.Model" Label="Модель" Variant="Variant.Text" For="() => Command.Model" />
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.Manufacturer" Label="Производитель" Variant="Variant.Text" For="() => Command.Manufacturer" />
+
+                                <MudSelect ToStringFunc="convertFunc"
+                                           Label="Тип"
+                                           Variant="Variant.Text"
+                                           For="()=> Command.Type"
+                                           @bind-Value="Command.Type">
+
+                                    @foreach (var item in DeviceTypes)
+                                            {
+                                        <MudSelectItem Value="@item">@item.Name</MudSelectItem>
+                                            }
+                                </MudSelect>
+
+                                <MudTextField Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Edit" @bind-Value="Command.SerialNumber" Label="Заводской номер" Variant="Variant.Text" For="() => Command.SerialNumber" />
+                                <MudTextField Class="mt-8" @bind-Value="Command.Description" Lines="5" Label="Комментарии" Variant="Variant.Outlined"></MudTextField>
+                            </MudForm>
+                        }
+                    </MudPaper>
+                </MudCardContent>
+                <MudCardActions Class="justify-end align-center pr-6">
+                    @if (!_readonly)
+                    {
+                        <MudButton StartIcon="@Icons.Filled.Save" Class="mr-2 mb-2" Variant="Variant.Filled" OnClick="Submit" Color="Color.Success">Сохранить</MudButton>
+                    }
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="6">
+            <MudCard Style="height:100%">
+                <MudCardHeader Class="pl-8">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">История использования:</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <AuthorizeView Roles="Admin">
+                            <MudMenu Icon="@Icons.Material.Filled.Settings" Color="Color.Default">
+                                @if (!Device.InUse)
+                                {
+                                    <MudMenuItem OnClick="CheckinDevice"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.KeyboardTab" Color="Color.Default" />Выдать оборудование</MudMenuItem>
+                                }
+                                else
+                                {
+                                    <MudMenuItem OnClick="CheckoutDevice"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.KeyboardReturn" Color="Color.Default" />Забрать оборудование</MudMenuItem>
+                                }
+                            </MudMenu>
+                        </AuthorizeView>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="px-8">
+                    <MudSimpleTable Elevation="4" Dense="true" FixedHeader="true" Style="height:520px">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Выдано</th>
+                                <th>Возвращено</th>
+                                <th>Сотрудник</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Device.Checkouts.Count; i++)
+                            {
+                            <tr>
+                                <td>@(i+1)</td>
+                                <td>@Device.Checkouts[i].CheckedIn</td>
+                                <td>@Device.Checkouts[i].CheckedOut</td>
+                                @{
+                                    var name = Device.Checkouts[i].Employee.FullName;
+                                    var href = $"/employee/{Device.Checkouts[i].Employee.Id}/details";
+                                }
+                                <td><MudLink Color="Color.Info" Href="@href">@name</MudLink></td>
+                            </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudMessageBox @ref="_mbox" Title="Доп. Инфо">
+        <MessageContent>
+            <MudField Label="Добавлено" Variant="Variant.Text">@_created</MudField>
+            <MudField Label="Последнее изменение" Variant="Variant.Text">@_edited</MudField>
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Info">Ok</MudButton>
+        </YesButton>
+    </MudMessageBox>
+}
+
+@code{
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private MudForm _form;
+    private MudMessageBox _mbox;
+
+    private bool _readonly = true;
+    private string _created;
+    private string _edited;
+
+    private HttpClient _httpClient;
+
+    public DeviceDetailsVm Device { get; set; }
+    public UpdateDeviceCommand Command { get; set; }
+    public List<DeviceTypeDto> DeviceTypes { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            _httpClient = HttpClientFactory.CreateClient("API");
+        }
+        else
+        {
+            _httpClient = HttpClientFactory.CreateClient("Unauthorized");
+        }
+        await UpdateData();
+    }
+
+    private async Task UpdateData()
+    {
+        Device = await _httpClient.GetFromJsonAsync<DeviceDetailsVm>($"api/device/{int.Parse(Id)}");
+
+        _created = $"{Device.CreationDate.ToShortDateString()} ({Device.CreatedBy})";
+
+        _edited = !string.IsNullOrEmpty(Device.EditedBy)
+            ? $"{Device.CreationDate.ToShortDateString()} ({Device.EditedBy})" : $"---";
+    }
+
+    private async Task Submit()
+    {
+        _form.Validate();
+
+        if (_form.IsValid)
+        {
+            var result = await _httpClient.PutAsJsonAsync("api/device", Command);
+
+            if (result.IsSuccessStatusCode)
+            {
+                await UpdateData();
+                _readonly = true;
+            }
+        }
+    }
+
+    private async Task EditDevice()
+    {
+        var deviceTypes = await _httpClient.GetFromJsonAsync<DeviceTypesListVm>("api/device/types");
+
+        DeviceTypes = deviceTypes.DeviceTypes;
+
+        Command = new UpdateDeviceCommand
+        {
+            Id = Device.Id,
+            Name = Device.Name,
+            Model = Device.Model,
+            Manufacturer = Device.Manufacturer,
+            SerialNumber = Device.SerialNumber,
+            Year = Device.Year,
+            Description = Device.Description,
+            Type = Device.Type
+        };
+
+        _readonly = !_readonly;
+    }
+
+    private async Task DeleteDevice()
+    {
+        var result = await DialogService.ShowMessageBox(
+            title: "Удаление оборудования",
+            message: "Вы уверены что хотите удалить это оборудование?",
+            yesText: "Да",
+            cancelText: "Нет");
+
+        if (result.HasValue)
+        {
+            var deviceTypes = await _httpClient.DeleteAsync($"api/device/{Device.Id}");
+            Navigation.NavigateTo("/device");
+        }
+    }
+
+    private async Task CheckinDevice()
+    {
+        var options = new DialogOptions() { MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var parameters = new DialogParameters();
+
+        var dialog = DialogService.Show<SelectEmployee>("", options);
+
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            int.TryParse(result.Data.ToString(), out int employeeId);
+
+            var command = new CheckinDeviceCommand
+            {
+                DevicesId = new List<int> { Device.Id },
+                EmployeeId = employeeId
+            };
+
+            await _httpClient.PostAsJsonAsync("api/device/checkin", command);
+            await UpdateData();
+        }
+    }
+
+    private async Task CheckoutDevice()
+    {
+        var result = await DialogService.ShowMessageBox(title: "Возврат оборудования",
+            message: "Вы уверены что хотите забрать оборудование у сотрудника?",
+            yesText: "Да",
+            cancelText: "Нет");
+
+        if (result.HasValue)
+        {
+            var command = new CheckoutDeviceCommand { DeviceId = Device.Id };
+            await _httpClient.PostAsJsonAsync("api/device/checkout", command);
+            await UpdateData();
+        }
+    }
+
+    private Func<DeviceTypeDto, string> convertFunc = dt => dt?.Name;
+}

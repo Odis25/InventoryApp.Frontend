@@ -1,0 +1,17 @@
+.logo {
+    font-family: cursive, 'Roboto', sans-serif;
+    font-weight: bold;
+    color: white;
+    font-size: 1.8em;
+    text-shadow: 2px 2px 4px #888;
+}
+    .logo > .logo-left {
+        color: #c7e571;
+    }
+    .logo > .logo-right {
+        background: #c7e571;
+        border-radius: 5px;
+        padding: 5px;
+        color: #335;
+        margin-left: 2px; 
+    }

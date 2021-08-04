@@ -1,0 +1,68 @@
+﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+html, body {
+    font-family: 'Roboto', Helvetica, Arial, sans-serif;
+    font-size: 1rem;
+    background-color: lightgrey;
+}
+
+/*---- Скроллер ----*/
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #d4d4d4;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #808080;
+    border: 2px solid #d4d4d4;
+    border-radius: 8px;
+}
+
+.scroller {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 80vh;
+    padding-right: 10px;
+    margin-top: 40px;
+}
+
+.vh-100 {
+    height: 100vh !important;
+}
+.vh-90 {
+    height: 90vh !important;
+}
+
+.bg-loading {
+    background-color: rgb(87,87,87);
+}
+.loading {
+    color: #c7e571;
+    padding: 1.5rem;
+    font-family: Roboto;
+    font-size: 2rem;
+}
+
+.spinner {
+    border: 6px solid darkgrey;
+    border-top: 6px solid #c7e571;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 700ms linear infinite;
+    top: 40%;
+    left: 55%;
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg)
+    }
+
+    100% {
+        transform: rotate(360deg)
+    }
+}

@@ -1,0 +1,46 @@
+﻿@using InventoryApp.Frontend.Models.Cable
+
+@inject HttpClient HttpClient
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.ElectricalServices" Class="mr-3 mb-n1" /> Новый кабель
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudNumericField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Длина" @bind-Value="Command.Length" />
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Обозначение" For="()=> Command.Name" @bind-Value="Command.Name" />
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Марка" For="()=> Command.Mark" @bind-Value="Command.Mark" />
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Количество жил и сечение" For="()=> Command.Type" @bind-Value="Command.Type" />
+            <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Описание" Lines="4" @bind-Value="Command.Description" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Dark" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+        <MudButton Color="Color.Dark" OnClick="Cancel">Отмена</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code{
+
+    MudForm form;
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    public CreateCableCommand Command { get; set; } = new();
+
+    async Task Submit()
+    {
+        form.Validate();
+
+        if (form.IsValid)
+        {
+            var id = await HttpClient.PostAsJsonAsync("api/cable", Command);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}
