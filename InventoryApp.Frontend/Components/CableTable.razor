@@ -39,11 +39,11 @@
           Class="mt-2 print-content" Items="@CablesList" Hover="true" Striped="true"
           Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Name)">Обозначение</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Type)">Кол-во жил и сечение</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Length)">Длина</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.CurrentUser?.FullName)">Текущий владелец</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Id)"><b>Id</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Name)"><b>Обозначение</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Type)"><b>Кол-во жил и сечение</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.Length)"><b>Длина</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<CableDto, object>(x => x.CurrentUser?.FullName)"><b>Текущий владелец</b></MudTableSortLabel></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>

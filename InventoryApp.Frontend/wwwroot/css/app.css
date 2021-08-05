@@ -37,6 +37,7 @@ html, body {
     height: 90vh !important;
 }
 
+/*--- экран начальной загрузки ---*/
 .bg-loading {
     background-color: rgb(87,87,87);
 }
@@ -46,7 +47,6 @@ html, body {
     font-family: Roboto;
     font-size: 2rem;
 }
-
 .spinner {
     border: 6px solid darkgrey;
     border-top: 6px solid #c7e571;
@@ -65,4 +65,15 @@ html, body {
     100% {
         transform: rotate(360deg)
     }
+}
+
+/*--- Mudblazor's classes color settings ---*/
+.mud-input.mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: rgb(12,131,226) !important;
+}
+.mud-input:focus-within ~ label.mud-input-label.mud-input-label-inputcontrol {
+    color: rgb(12,131,226) !important;
+}
+.mud-input.mud-input-underline:after {
+    border-bottom: 2px solid rgb(12,131,226);
 }

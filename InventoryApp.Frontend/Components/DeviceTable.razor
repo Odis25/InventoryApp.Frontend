@@ -39,12 +39,12 @@
           Class="mt-2 print-content" Items="@DevicesList" Hover="true" Striped="true"
           Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
     <HeaderContent>
-        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Id)">Id</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Type)">Тип</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Name)">Название</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Manufacturer)">Производитель</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Model)">Модель</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.CurrentUser?.FullName)">Текущий владелец</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Id)"><b>Id</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Type)"><b>Тип</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Name)"><b>Название</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Manufacturer)"><b>Производитель</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Model)"><b>Модель</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.CurrentUser?.FullName)"><b>Текущий владелец</b></MudTableSortLabel></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>

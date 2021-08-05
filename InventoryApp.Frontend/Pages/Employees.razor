@@ -53,11 +53,11 @@ else
                       Class="mt-2 print-content" Items="@EmployeesList" Hover="true" Striped="true"
                       Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
                 <HeaderContent>
-                    <MudTh>Id</MudTh>
-                    <MudTh>Ф.И.О.</MudTh>
-                    <MudTh>Департамент</MudTh>
-                    <MudTh>Оборудование на балансе</MudTh>
-                    <MudTh>Кабели на балансе</MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EmployeeDto, object>(x => x.Id)"><b>Id</b></MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EmployeeDto, object>(x => x.FullName)"><b>Ф.И.О.</b></MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<EmployeeDto, object>(x => x.Department)"><b>Департамент</b></MudTableSortLabel></MudTh>
+                    <MudTh><b>Оборудование на балансе</b></MudTh>
+                    <MudTh><b>Кабели на балансе</b></MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Id">@context.Id</MudTd>

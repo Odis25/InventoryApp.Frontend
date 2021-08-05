@@ -165,7 +165,9 @@ else
                                                 <td>
                                                     @if (!hasCheckout)
                                                     {
-                                                        <MudIconButton Class="ma-2" Icon="@Icons.Filled.Close" Size="Size.Small" OnClick="() => CheckoutCable(id)" />
+                                                        <MudTooltip Text="Забрать">
+                                                            <MudIconButton Class="ma-2" Icon="@Icons.Filled.Close" Size="Size.Small" OnClick="() => CheckoutCable(id)" />
+                                                        </MudTooltip>
                                                     }
                                                 </td>
                                             </AuthorizeView>
