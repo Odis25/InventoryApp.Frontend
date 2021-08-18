@@ -10,7 +10,7 @@
     </TitleContent>
     <DialogContent>
         <MudForm @ref="form">
-            <MudNumericField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Длина" @bind-Value="Command.Length" />
+            <MudNumericField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Длина" Adornment="Adornment.End" AdornmentText="м" For="()=> Command.Length" @bind-Value="Command.Length" />
             <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Обозначение" For="()=> Command.Name" @bind-Value="Command.Name" />
             <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Марка" For="()=> Command.Mark" @bind-Value="Command.Mark" />
             <MudTextField Class="mb-2" Variant="Variant.Outlined" Margin="Margin.Dense" Label="Количество жил и сечение" For="()=> Command.Type" @bind-Value="Command.Type" />
@@ -29,7 +29,7 @@
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
 
-    public CreateCableCommand Command { get; set; } = new();
+    public CreateCableCommand Command { get; set; } = new CreateCableCommand { Length = 1 };
 
     async Task Submit()
     {

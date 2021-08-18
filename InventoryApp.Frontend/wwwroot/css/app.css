@@ -3,7 +3,7 @@
 html, body {
     font-family: 'Roboto', Helvetica, Arial, sans-serif;
     font-size: 1rem;
-    background-color: lightgrey;
+    background-color: #C7E5BF;
 }
 
 /*---- Скроллер ----*/
@@ -76,4 +76,8 @@ html, body {
 }
 .mud-input.mud-input-underline:after {
     border-bottom: 2px solid rgb(12,131,226);
+}
+
+.mud-simple-table.mud-table-sticky-header .mud-table-container {
+    height: 100%;
 }

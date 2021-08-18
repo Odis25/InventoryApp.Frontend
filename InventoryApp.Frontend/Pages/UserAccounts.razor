@@ -1,0 +1,103 @@
+﻿@page "/accounts"
+
+@using InventoryApp.Frontend.Models
+
+@inject IHttpClientFactory HttpClientFactory
+@inject ISnackbar Snackbar
+
+@if (Accounts == null)
+{
+<MudText Class="my-16" Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Загрузка...</MudText>
+}
+else
+{
+<MudGrid>
+    <MudItem xs="12">
+
+        <MudPaper Style="background: #424242;" Class="d-flex align-center justify-center mud-width-full py-2 mt-4 shades-text text-white">
+            <MudText Align="Align.Center" Typo="Typo.h5" GutterBottom="true">Пользователи приложения</MudText>
+        </MudPaper>
+
+        <MudPaper Class="py-1 px-4 mt-2" Width="100%" Elevation="2">
+            <MudGrid>
+                <MudItem xs="6" Class="d-flex justify-center">
+                    <MudTextField @bind-Value="searchString"
+                                  Placeholder="Найти..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Class="mb-3 mr-2">
+                    </MudTextField>
+                </MudItem>
+                <MudItem xs="3" />
+                <MudItem xs="3" Class="d-flex align-center justify-end">
+
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Dark"
+                                   OnClick="SaveChanges"
+                                   StartIcon="@Icons.Filled.Save">Сохранить изменения</MudButton>
+                </MudItem>
+            </MudGrid>
+
+        </MudPaper>
+
+        <MudTable Elevation="2" T="Account"
+                  Class="mt-2 print-content" Items="@Accounts" Hover="true" Striped="true"
+                  Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<Account, object>(x => x.LastName)"><b>Фамилия</b></MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Account, object>(x => x.FirstName)"><b>Имя</b></MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Account, object>(x => x.Name)"><b>Имя аккаунта</b></MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Account, object>(x => x.Role)"><b>Роль</b></MudTableSortLabel></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Фамилия">@context.LastName</MudTd>
+                <MudTd DataLabel="Имя">@context.FirstName</MudTd>
+                <MudTd DataLabel="Имя аккаунта">@context.Name</MudTd>
+                <MudTd DataLabel="Роль">
+                    <MudSelect T="string" @bind-Value="context.Role">
+                        <MudSelectItem Value="@("Admin")">Администратор</MudSelectItem>
+                        <MudSelectItem Value="@("SuperUser")">Модератор</MudSelectItem>
+                        <MudSelectItem Value="@("User")">Пользователь</MudSelectItem>
+                    </MudSelect>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudItem>
+</MudGrid>
+}
+
+@code{
+
+    public IList<Account> Accounts { get; set; }
+
+    public HttpClient _httpClient;
+
+    private string searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _httpClient = HttpClientFactory.CreateClient("AuthServer");
+
+        Accounts = await _httpClient.GetFromJsonAsync<IList<Account>>("account/inventoryapp");
+    }
+
+    private async Task SaveChanges()
+    {
+        await _httpClient.PutAsJsonAsync<IList<Account>>("account/inventoryapp", Accounts);
+
+        Snackbar.Add("Изменения сохранены", Severity.Success);
+    }
+
+    private bool FilterFunc(Account account)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+
+        if (account.LastName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (account.FirstName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (account.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (account.Role.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    }
+}
