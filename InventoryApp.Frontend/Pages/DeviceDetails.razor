@@ -90,7 +90,7 @@ else
                     </CardHeaderContent>
                     <CardHeaderActions>
                         <AuthorizeView Roles="Admin">
-                            <MudMenu Icon="@Icons.Material.Filled.Settings" Color="Color.Default">
+                            <MudMenu OffsetX="true" Direction="Direction.Left"  Icon="@Icons.Material.Filled.Settings" Color="Color.Default">
                                 @if (!Device.InUse)
                                 {
                                     <MudMenuItem OnClick="CheckinDevice"><MudIcon Class="mr-2 mb-n1" Icon="@Icons.Filled.KeyboardTab" Color="Color.Default" />Выдать оборудование</MudMenuItem>
