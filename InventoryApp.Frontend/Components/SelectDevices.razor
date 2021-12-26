@@ -10,12 +10,14 @@
     <DialogContent>
         <MudTable Items="Devices" Height="400px" FixedHeader="true" MultiSelection="true" @bind-SelectedItems="selectedItems" Hover="true">
             <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Year)">Год</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Type)">Тип</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Name)">Название</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Model)">Модель</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x=>x.Manufacturer)">Производитель</MudTableSortLabel></MudTh>
             </HeaderContent>
             <RowTemplate>
+                <MudTd DataLabel="Год">@context.Year</MudTd>
                 <MudTd DataLabel="Тип">@context.Type</MudTd>
                 <MudTd DataLabel="Название">@context.Name</MudTd>
                 <MudTd DataLabel="Модель">@context.Model</MudTd>

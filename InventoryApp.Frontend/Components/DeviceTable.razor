@@ -40,6 +40,7 @@
           Filter="((element) => FilterFunc(element))" FixedHeader="true" Height="80vh">
     <HeaderContent>
         <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Id)"><b>Id</b></MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Year)"><b>Год</b></MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Type)"><b>Тип</b></MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Name)"><b>Название</b></MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortBy="new Func<DeviceDto, object>(x => x.Manufacturer)"><b>Производитель</b></MudTableSortLabel></MudTh>
@@ -48,6 +49,7 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Год">@context.Year</MudTd>
         <MudTd DataLabel="Тип">@context.Type</MudTd>
         <MudTd DataLabel="Название">@context.Name</MudTd>
         <MudTd DataLabel="Производитель">@context.Manufacturer</MudTd>
@@ -81,6 +83,7 @@
 
         if (string.IsNullOrWhiteSpace(filtredString)) return true;
 
+        if (device.Year.ToString().Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
         if (device.Name.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
         if (device.Model.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
         if (device.Manufacturer.Contains(filtredString, StringComparison.OrdinalIgnoreCase)) return true;
