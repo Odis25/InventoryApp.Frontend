@@ -238,8 +238,8 @@ else
 
         if (result.HasValue)
         {
-            var deviceTypes = await _httpClient.DeleteAsync($"api/device/{Device.Id}");
-            Navigation.NavigateTo("/device");
+            await _httpClient.DeleteAsync($"api/device/{Device.Id}");
+            Navigation.NavigateTo("/equipment");
         }
     }
 
